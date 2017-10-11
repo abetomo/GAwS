@@ -56,12 +56,12 @@ var AWS = (function() {
       headers = headers || {};
       uri = uri || '/';
 
-      var Crypto = loadCrypto();
+      const Crypto = loadCrypto();
 
-      var d = new Date();
+      const d = new Date();
 
-      var dateStringFull = Utilities.formatDate(d, 'UTC', "yyyyMMdd'T'HHmmss'Z'");
-      var dateStringShort = Utilities.formatDate(d, 'UTC', 'yyyyMMdd');
+      const dateStringFull = Utilities.formatDate(d, 'UTC', "yyyyMMdd'T'HHmmss'Z'");
+      const dateStringShort = Utilities.formatDate(d, 'UTC', 'yyyyMMdd');
       var host = service + '.' + region + '.amazonaws.com';
       var request;
       var query;
@@ -88,7 +88,7 @@ var AWS = (function() {
       });
       signedHeaders = signedHeaders.substring(0, signedHeaders.length - 1);
 
-      var CanonicalString = [
+      const CanonicalString = [
         method,
         uri,
         query,
@@ -96,24 +96,24 @@ var AWS = (function() {
         signedHeaders,
         Crypto.SHA256(payload)
       ].join('\n');
-      var algorithm = 'AWS4-HMAC-SHA256';
-      var scope = dateStringShort + '/' + region + '/' + service + '/aws4_request';
+      const algorithm = 'AWS4-HMAC-SHA256';
+      const scope = dateStringShort + '/' + region + '/' + service + '/aws4_request';
 
-      var StringToSign = [
+      const StringToSign = [
         algorithm,
         dateStringFull,
         scope,
         Crypto.SHA256(CanonicalString)
       ].join('\n');
 
-      var key = getSignatureKey(Crypto, secretKey, dateStringShort, region, service);
-      var signature = Crypto.HMAC(Crypto.SHA256, StringToSign, key, { asBytes: false });
+      const key = getSignatureKey(Crypto, secretKey, dateStringShort, region, service);
+      const signature = Crypto.HMAC(Crypto.SHA256, StringToSign, key, { asBytes: false });
 
-      var authHeader = algorithm + ' Credential=' + accessKey + '/' + scope + ', SignedHeaders=' + signedHeaders + ', Signature=' + signature;
+      const authHeader = algorithm + ' Credential=' + accessKey + '/' + scope + ', SignedHeaders=' + signedHeaders + ', Signature=' + signature;
 
       headers['Authorization'] = authHeader;
       delete headers['Host'];
-      var options = {
+      const options = {
         method: method,
         headers: headers,
         muteHttpExceptions: true,
@@ -128,10 +128,10 @@ var AWS = (function() {
    * Source: http://docs.aws.amazon.com/general/latest/gr/signature-v4-examples.html#signature-v4-examples-jscript
    */
   function getSignatureKey(Crypto, key, dateStamp, regionName, serviceName) {
-    var kDate = Crypto.HMAC(Crypto.SHA256, dateStamp, 'AWS4' + key, { asBytes: true });
-    var kRegion = Crypto.HMAC(Crypto.SHA256, regionName, kDate, { asBytes: true });
-    var kService = Crypto.HMAC(Crypto.SHA256, serviceName, kRegion, { asBytes: true });
-    var kSigning = Crypto.HMAC(Crypto.SHA256, 'aws4_request', kService, { asBytes: true });
+    const kDate = Crypto.HMAC(Crypto.SHA256, dateStamp, 'AWS4' + key, { asBytes: true });
+    const kRegion = Crypto.HMAC(Crypto.SHA256, regionName, kDate, { asBytes: true });
+    const kService = Crypto.HMAC(Crypto.SHA256, serviceName, kRegion, { asBytes: true });
+    const kSigning = Crypto.HMAC(Crypto.SHA256, 'aws4_request', kService, { asBytes: true });
 
     return kSigning;
   }
