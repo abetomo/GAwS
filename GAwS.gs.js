@@ -18,6 +18,7 @@ var AWS = (function() {
       accessKey = argAccessKey;
       secretKey = argSecretKey;
     },
+
     /**
      * Sets up keys for authentication so you can make your requests. Keys are not gettable once added.
      * @param {string} accessKey - your aws access key
@@ -26,6 +27,7 @@ var AWS = (function() {
     init: function(accessKey, secretKey) {
       AWS.setNewKey(accessKey, secretKey);
     },
+
     /**
      * Authenticates and sends the given parameters for an AWS api request.
      * @param {string} service - the aws service to connect to (e.g. 'ec2', 'iam', 'codecommit')
