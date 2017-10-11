@@ -6,25 +6,25 @@ var AWS = (function() {
   return {
     /**
      * Sets new authorization keys
-     * @param {string} access_key - the new access_key
-     * @param {string} secret_key - the new secret key
+     * @param {string} argAccessKey - the new access_key
+     * @param {string} argSecretKey - the new secret key
      */
-    setNewKey: function(access_key, secret_key) {
-      if (access_key == undefined) {
+    setNewKey: function(argAccessKey, argSecretKey) {
+      if (argAccessKey == undefined) {
         throw 'Error: No access key provided';
-      } else if (secret_key == undefined) {
+      } else if (argSecretKey == undefined) {
         throw 'Error: No secret key provided';
       }
-      accessKey = access_key;
-      secretKey = secret_key;
+      accessKey = argAccessKey;
+      secretKey = argSecretKey;
     },
     /**
      * Sets up keys for authentication so you can make your requests. Keys are not gettable once added.
-     * @param {string} access_key - your aws access key
-     * @param {string} secret_key - your aws secret key
+     * @param {string} accessKey - your aws access key
+     * @param {string} secretKey - your aws secret key
      */
-    init: function(access_key, secret_key) {
-      AWS.setNewKey(access_key, secret_key);
+    init: function(accessKey, secretKey) {
+      AWS.setNewKey(accessKey, secretKey);
     },
     /**
      * Authenticates and sends the given parameters for an AWS api request.
@@ -62,7 +62,7 @@ var AWS = (function() {
 
       const dateStringFull = Utilities.formatDate(d, 'UTC', "yyyyMMdd'T'HHmmss'Z'");
       const dateStringShort = Utilities.formatDate(d, 'UTC', 'yyyyMMdd');
-      var host = service + '.' + region + '.amazonaws.com';
+      const host = service + '.' + region + '.amazonaws.com';
       var request;
       var query;
       if (method.toLowerCase() == 'post') {
