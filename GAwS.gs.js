@@ -10,9 +10,9 @@ var AWS = (function() {
      * @param {string} argSecretKey - the new secret key
      */
     setNewKey: function(argAccessKey, argSecretKey) {
-      if (argAccessKey == undefined) {
+      if (argAccessKey == null) {
         throw 'Error: No access key provided';
-      } else if (argSecretKey == undefined) {
+      } else if (argSecretKey == null) {
         throw 'Error: No secret key provided';
       }
       accessKey = argAccessKey;
@@ -41,16 +41,16 @@ var AWS = (function() {
      * @return {string} the server response to the request
      */
     request: function(service, region, action, params, method, payload, headers, uri) {
-      if (service == undefined) {
+      if (service == null) {
         throw 'Error: Service undefined';
-      } else if (region == undefined) {
+      } else if (region == null) {
         throw 'Error: Region undefined';
-      } else if (action == undefined) {
+      } else if (action == null) {
         throw 'Error: Action undefined';
       }
 
       method = method || 'GET';
-      if (payload == undefined) {
+      if (payload == null) {
         payload = '';
       } else if (typeof payload !== 'string') {
         payload = JSON.stringify(payload);
