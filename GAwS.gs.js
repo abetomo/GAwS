@@ -24,6 +24,7 @@ function loadCrypto() {
 
 var AWS = (function() {
   const Crypto = loadCrypto();
+  const hashAlgorithm = 'AWS4-HMAC-SHA256';
 
   // Keys cannot be retrieved once initialized but can be changed
   var accessKey;
@@ -109,40 +110,17 @@ var AWS = (function() {
 
       headers['Host'] = host;
       headers['X-Amz-Date'] = dateStringFull;
-      const [canonHeaders, signedHeaders] = (function () {
-        const canonHeadersArray = [];
-        const signedHeadersArray = [];
-        Object.keys(headers).sort(function(a, b){return a < b ? -1 : 1;}).forEach(function(key) {
-          canonHeadersArray.push(key.toLowerCase() + ':' + headers[key]);
-          signedHeadersArray.push(key.toLowerCase());
-        });
-        return [canonHeadersArray.join('\n') + '\n', signedHeadersArray.join(';')]
-      })();
-
-      const CanonicalString = [
-        method,
-        uri,
-        query,
-        canonHeaders,
-        signedHeaders,
-        Crypto.SHA256(payload)
-      ].join('\n');
-      const algorithm = 'AWS4-HMAC-SHA256';
-      const scope = dateStringShort + '/' + region + '/' + service + '/aws4_request';
-
-      const StringToSign = [
-        algorithm,
-        dateStringFull,
-        scope,
-        Crypto.SHA256(CanonicalString)
-      ].join('\n');
-
-      const key = getSignatureKey(secretKey, dateStringShort, region, service);
-      const signature = Crypto.HMAC(Crypto.SHA256, StringToSign, key, { asBytes: false });
-
-      const authHeader = algorithm + ' Credential=' + accessKey + '/' + scope + ', SignedHeaders=' + signedHeaders + ', Signature=' + signature;
-
-      headers['Authorization'] = authHeader;
+      headers['Authorization'] = getAuthorization({
+        method: method,
+        region: region,
+        service: service,
+        uri: uri,
+        query: query,
+        headers: headers,
+        payload: payload,
+        dateStringFull: dateStringFull,
+        dateStringShort: dateStringShort
+      });
       delete headers['Host'];
       const options = {
         method: method,
@@ -154,6 +132,38 @@ var AWS = (function() {
       return UrlFetchApp.fetch(request, options);
     }
   };
+
+  function getCanonAndSignedHeaders(headers) {
+    const canonHeadersArray = [];
+    const signedHeadersArray = [];
+    Object.keys(headers).sort(function(a, b){return a < b ? -1 : 1;}).forEach(function(key) {
+      canonHeadersArray.push(key.toLowerCase() + ':' + headers[key]);
+      signedHeadersArray.push(key.toLowerCase());
+    });
+    return [canonHeadersArray.join('\n') + '\n', signedHeadersArray.join(';')]
+  }
+
+  function getAuthorization(params) {
+    const [canonHeaders, signedHeaders] = getCanonAndSignedHeaders(params.headers);
+    const CanonicalString = [
+      params.method,
+      params.uri,
+      params.query,
+      canonHeaders,
+      signedHeaders,
+      Crypto.SHA256(params.payload)
+    ].join('\n');
+    const scope = params.dateStringShort + '/' + params.region + '/' + params.service + '/aws4_request';
+    const StringToSign = [
+      hashAlgorithm,
+      params.dateStringFull,
+      scope,
+      Crypto.SHA256(CanonicalString)
+    ].join('\n');
+    const key = getSignatureKey(secretKey, params.dateStringShort, params.region, params.service);
+    const signature = Crypto.HMAC(Crypto.SHA256, StringToSign, key, { asBytes: false });
+    return hashAlgorithm + ' Credential=' + accessKey + '/' + scope + ', SignedHeaders=' + signedHeaders + ', Signature=' + signature;
+  }
 
   /**
    * Source: http://docs.aws.amazon.com/general/latest/gr/signature-v4-examples.html#signature-v4-examples-jscript
