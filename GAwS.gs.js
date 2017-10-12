@@ -24,7 +24,6 @@ function loadCrypto() {
 
 var AWS = (function() {
   const Crypto = loadCrypto();
-  const hashAlgorithm = 'AWS4-HMAC-SHA256';
 
   // Keys cannot be retrieved once initialized but can be changed
   var accessKey;
@@ -144,6 +143,7 @@ var AWS = (function() {
   }
 
   function getAuthorization(params) {
+    const hashAlgorithm = 'AWS4-HMAC-SHA256';
     const [canonHeaders, signedHeaders] = getCanonAndSignedHeaders(params.headers);
     const CanonicalString = [
       params.method,
