@@ -56,7 +56,6 @@ var AWS = (function() {
 
     /**
      * Authenticates and sends the given parameters for an AWS api request.
-     * @param {string} service - the aws service to connect to (e.g. 'ec2', 'iam', 'codecommit')
      * @param {string} region - the aws region your command will go to (e.g. 'us-east-1')
      * @param {string} action - the api action to call
      * @param {Object} [params] - the parameters to call on the action. Defaults to none.
@@ -66,25 +65,75 @@ var AWS = (function() {
      * @param {string} [uri='/'] - the path after the domain before the action. Defaults to '/'.
      * @return {string} the server response to the request
      */
-    request: function(service, region, action, params, method, payload, headers, uri) {
-      if (service == null) {
-        throw 'Error: Service undefined';
-      } else if (region == null) {
+    ec2: function(region, action, params, method, payload, headers, uri) {
+      if (region == null) {
         throw 'Error: Region undefined';
       } else if (action == null) {
         throw 'Error: Action undefined';
       }
+      return this.request({
+        service: 'ec2',
+        region: region,
+        action: action,
+        requestParams: params,
+        method: method,
+        payload: payload,
+        headers: headers,
+        uri: uri,
+        host: 'ec2.' + region + '.amazonaws.com',
+        headersDateKey: 'X-Amz-Date'
+      });
+    },
 
-      const host = service + '.' + region + '.amazonaws.com';
-
-      method = method || 'GET';
-      if (payload == null) {
-        payload = '';
-      } else if (typeof payload !== 'string') {
-        payload = JSON.stringify(payload);
+    s3: function(region, bucket, key, method, payload, headers) {
+      if (region == null) {
+        throw 'Error: Region undefined';
       }
-      headers = headers || {};
-      uri = uri || '/';
+      const _payload = (function () {
+        if (payload == null) return '';
+        if (typeof payload !== 'string') return JSON.stringify(payload);
+        return payload;
+      })();
+      if (headers == null) headers = {};
+      headers['x-amz-content-sha256'] = Crypto.SHA256(_payload);
+
+      return this.request({
+        service: 's3',
+        region: region,
+        method: method,
+        payload: _payload,
+        headers: headers,
+        uri: '/' + key,
+        host: bucket + '.s3-' + region + '.amazonaws.com',
+        headersDateKey: 'Date'
+      });
+    },
+
+    lambda: function(region, action, method, functionName, payload) {
+      return this.request({
+        service: 'lambda',
+        region: region,
+        method: method,
+        payload: payload,
+        uri: '/2014-11-13/functions/' + functionName + '/' + action + '/',
+        host: 'lambda.' + region + '.amazonaws.com',
+        headersDateKey: 'X-Amz-Date'
+      });
+    },
+
+    request: function(params) {
+      const service = params.service;
+      const region = params.region;
+      const action = params.action;
+      const method = params.method || 'GET';
+      const payload = (function () {
+        if (params.payload == null) return '';
+        if (typeof params.payload !== 'string') return JSON.stringify(params.payload);
+        return params.payload;
+      })();
+      const headers = params.headers || {};
+      const uri = params.uri || '/';
+      const host = params.host;
 
       const [dateStringFull, dateStringShort] = (function() {
         const date = new Date();
@@ -98,17 +147,20 @@ var AWS = (function() {
         if (method.toLowerCase() == 'post') {
           return ['https://' + host + uri, ''];
         }
-        var query = 'Action=' + action;
-        if (params) {
-          Object.keys(params).sort(function(a, b) { return a < b ? -1 : 1; }).forEach(function(name) {
-            query += '&' + name + '=' + encodeURIComponent(params[name]);
+        var query = '';
+        if (action != null) {
+          query = 'Action=' + action;
+        }
+        if (params.requestParams) {
+          Object.keys(params.requestParams).sort(function(a, b) { return a < b ? -1 : 1; }).forEach(function(name) {
+            query += '&' + name + '=' + encodeURIComponent(params.requestParams[name]);
           });
         }
         return ['https://' + host + uri + '?' + query, query];
       })();
 
       headers['Host'] = host;
-      headers['X-Amz-Date'] = dateStringFull;
+      headers[params.headersDateKey] = dateStringFull;
       headers['Authorization'] = getAuthorization({
         method: method,
         region: region,
