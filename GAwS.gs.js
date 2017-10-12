@@ -75,6 +75,8 @@ var AWS = (function() {
         throw 'Error: Action undefined';
       }
 
+      const host = service + '.' + region + '.amazonaws.com';
+
       method = method || 'GET';
       if (payload == null) {
         payload = '';
@@ -84,35 +86,38 @@ var AWS = (function() {
       headers = headers || {};
       uri = uri || '/';
 
-      const d = new Date();
+      const [dateStringFull, dateStringShort] = (function() {
+        const date = new Date();
+        return [
+          Utilities.formatDate(date, 'UTC', "yyyyMMdd'T'HHmmss'Z'"),
+          Utilities.formatDate(date, 'UTC', 'yyyyMMdd')
+        ];
+      })();
 
-      const dateStringFull = Utilities.formatDate(d, 'UTC', "yyyyMMdd'T'HHmmss'Z'");
-      const dateStringShort = Utilities.formatDate(d, 'UTC', 'yyyyMMdd');
-      const host = service + '.' + region + '.amazonaws.com';
-      var request;
-      var query;
-      if (method.toLowerCase() == 'post') {
-        request = 'https://' + host + uri;
-        query = '';
-      } else {
-        query = 'Action=' + action;
+      const [request, query] = (function() {
+        if (method.toLowerCase() == 'post') {
+          return ['https://' + host + uri, ''];
+        }
+        var query = 'Action=' + action;
         if (params) {
           Object.keys(params).sort(function(a, b) { return a < b ? -1 : 1; }).forEach(function(name) {
             query += '&' + name + '=' + encodeURIComponent(params[name]);
           });
         }
-        request = 'https://' + host + uri + '?' + query;
-      }
+        return ['https://' + host + uri + '?' + query, query];
+      })();
 
-      var canonHeaders = '';
-      var signedHeaders = '';
       headers['Host'] = host;
       headers['X-Amz-Date'] = dateStringFull;
-      Object.keys(headers).sort(function(a, b){return a < b ? -1 : 1;}).forEach(function(key) {
-        canonHeaders += key.toLowerCase() + ':' + headers[key] + '\n';
-        signedHeaders += key.toLowerCase() + ';';
-      });
-      signedHeaders = signedHeaders.substring(0, signedHeaders.length - 1);
+      const [canonHeaders, signedHeaders] = (function () {
+        const canonHeadersArray = [];
+        const signedHeadersArray = [];
+        Object.keys(headers).sort(function(a, b){return a < b ? -1 : 1;}).forEach(function(key) {
+          canonHeadersArray.push(key.toLowerCase() + ':' + headers[key]);
+          signedHeadersArray.push(key.toLowerCase());
+        });
+        return [canonHeadersArray.join('\n') + '\n', signedHeadersArray.join(';')]
+      })();
 
       const CanonicalString = [
         method,
