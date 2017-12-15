@@ -109,11 +109,11 @@ var AWS = (function() {
       });
     },
 
-    lambdaInvokeAsync: function(region, method, functionName, payload) {
+    lambdaInvokeAsync: function(region, functionName, payload) {
       return this.request({
         service: 'lambda',
         region: region,
-        method: method,
+        method: 'POST',
         payload: payload,
         uri: '/2014-11-13/functions/' + functionName + '/invoke-async/',
         host: 'lambda.' + region + '.amazonaws.com',
@@ -121,11 +121,11 @@ var AWS = (function() {
       });
     },
 
-    lambdaInvoke: function(region, method, functionName, payload) {
+    lambdaInvoke: function(region, functionName, payload) {
       return this.request({
         service: 'lambda',
         region: region,
-        method: method,
+        method: 'POST',
         payload: payload,
         uri: '/2015-03-31/functions/' + functionName + '/invocations',
         host: 'lambda.' + region + '.amazonaws.com',
