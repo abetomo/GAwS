@@ -1,0 +1,27 @@
+{
+  "name": "gaws",
+  "version": "0.0.1",
+  "description": "A script for calling the AWS API from Google Apps Script.",
+  "main": "GAwS.js",
+  "devDependencies": {
+    "@google/clasp": "^1.5.3"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/abetomo/GAwS.git"
+  },
+  "keywords": [
+    "google-apps-script",
+    "aws",
+    "gas"
+  ],
+  "author": "abetomo",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/abetomo/GAwS/issues"
+  },
+  "homepage": "https://github.com/abetomo/GAwS#readme"
+}
