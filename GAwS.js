@@ -1,3 +1,4 @@
+/* eslint-disable */
 function loadCrypto() {
   var window = {};
   var Crypto = undefined;
@@ -22,12 +23,14 @@ function loadCrypto() {
   return window.Crypto;
 }
 
-var AWS = (function() {
-  const Crypto = loadCrypto();
+/* eslint-enable */
+/* global Utilities, UrlFetchApp */
+var AWS = (function () {
+  const Crypto = loadCrypto()
 
   // Keys cannot be retrieved once initialized but can be changed
-  var accessKey;
-  var secretKey;
+  var accessKey
+  var secretKey
 
   return {
     /**
@@ -35,14 +38,14 @@ var AWS = (function() {
      * @param {string} argAccessKey - the new access_key
      * @param {string} argSecretKey - the new secret key
      */
-    setNewKey: function(argAccessKey, argSecretKey) {
+    setNewKey: function (argAccessKey, argSecretKey) {
       if (argAccessKey == null) {
-        throw 'Error: No access key provided';
+        throw Error('Error: No access key provided')
       } else if (argSecretKey == null) {
-        throw 'Error: No secret key provided';
+        throw Error('Error: No secret key provided')
       }
-      accessKey = argAccessKey;
-      secretKey = argSecretKey;
+      accessKey = argAccessKey
+      secretKey = argSecretKey
     },
 
     /**
@@ -50,8 +53,8 @@ var AWS = (function() {
      * @param {string} accessKey - your aws access key
      * @param {string} secretKey - your aws secret key
      */
-    init: function(accessKey, secretKey) {
-      AWS.setNewKey(accessKey, secretKey);
+    init: function (accessKey, secretKey) {
+      AWS.setNewKey(accessKey, secretKey)
     },
 
     /**
@@ -65,11 +68,11 @@ var AWS = (function() {
      * @param {string} [uri='/'] - the path after the domain before the action. Defaults to '/'.
      * @return {string} the server response to the request
      */
-    ec2: function(region, action, params, method, payload, headers, uri) {
+    ec2: function (region, action, params, method, payload, headers, uri) {
       if (region == null) {
-        throw 'Error: Region undefined';
+        throw Error('Error: Region undefined')
       } else if (action == null) {
-        throw 'Error: Action undefined';
+        throw Error('Error: Action undefined')
       }
       return this.request({
         service: 'ec2',
@@ -82,20 +85,20 @@ var AWS = (function() {
         uri: uri,
         host: 'ec2.' + region + '.amazonaws.com',
         headersDateKey: 'X-Amz-Date'
-      });
+      })
     },
 
-    s3: function(region, bucket, key, method, payload, headers) {
+    s3: function (region, bucket, key, method, payload, headers) {
       if (region == null) {
-        throw 'Error: Region undefined';
+        throw Error('Error: Region undefined')
       }
       const _payload = (function () {
-        if (payload == null) return '';
-        if (typeof payload !== 'string') return JSON.stringify(payload);
-        return payload;
-      })();
-      if (headers == null) headers = {};
-      headers['x-amz-content-sha256'] = Crypto.SHA256(_payload);
+        if (payload == null) return ''
+        if (typeof payload !== 'string') return JSON.stringify(payload)
+        return payload
+      })()
+      if (headers == null) headers = {}
+      headers['x-amz-content-sha256'] = Crypto.SHA256(_payload)
 
       return this.request({
         service: 's3',
@@ -106,10 +109,10 @@ var AWS = (function() {
         uri: '/' + key,
         host: bucket + '.s3-' + region + '.amazonaws.com',
         headersDateKey: 'Date'
-      });
+      })
     },
 
-    lambdaInvokeAsync: function(region, functionName, payload) {
+    lambdaInvokeAsync: function (region, functionName, payload) {
       return this.request({
         service: 'lambda',
         region: region,
@@ -118,10 +121,10 @@ var AWS = (function() {
         uri: '/2014-11-13/functions/' + functionName + '/invoke-async/',
         host: 'lambda.' + region + '.amazonaws.com',
         headersDateKey: 'X-Amz-Date'
-      });
+      })
     },
 
-    lambdaInvoke: function(region, functionName, payload) {
+    lambdaInvoke: function (region, functionName, payload) {
       return this.request({
         service: 'lambda',
         region: region,
@@ -130,49 +133,49 @@ var AWS = (function() {
         uri: '/2015-03-31/functions/' + functionName + '/invocations',
         host: 'lambda.' + region + '.amazonaws.com',
         headersDateKey: 'X-Amz-Date'
-      });
+      })
     },
 
-    request: function(params) {
-      const service = params.service;
-      const region = params.region;
-      const action = params.action;
-      const method = params.method || 'GET';
+    request: function (params) {
+      const service = params.service
+      const region = params.region
+      const action = params.action
+      const method = params.method || 'GET'
       const payload = (function () {
-        if (params.payload == null) return '';
-        if (typeof params.payload !== 'string') return JSON.stringify(params.payload);
-        return params.payload;
-      })();
-      const headers = params.headers || {};
-      const uri = params.uri || '/';
-      const host = params.host;
+        if (params.payload == null) return ''
+        if (typeof params.payload !== 'string') return JSON.stringify(params.payload)
+        return params.payload
+      })()
+      const headers = params.headers || {}
+      const uri = params.uri || '/'
+      const host = params.host
 
-      const [dateStringFull, dateStringShort] = (function() {
-        const date = new Date();
+      const [dateStringFull, dateStringShort] = (function () {
+        const date = new Date()
         return [
           Utilities.formatDate(date, 'UTC', "yyyyMMdd'T'HHmmss'Z'"),
           Utilities.formatDate(date, 'UTC', 'yyyyMMdd')
-        ];
-      })();
+        ]
+      })()
 
-      const [request, query] = (function() {
-        if (method.toLowerCase() == 'post') {
-          return ['https://' + host + uri, ''];
+      const [request, query] = (function () {
+        if (method.toLowerCase() === 'post') {
+          return ['https://' + host + uri, '']
         }
-        var query = '';
+        var query = ''
         if (action != null) {
-          query = 'Action=' + action;
+          query = 'Action=' + action
         }
         if (params.requestParams) {
-          Object.keys(params.requestParams).sort(function(a, b) { return a < b ? -1 : 1; }).forEach(function(name) {
-            query += '&' + name + '=' + encodeURIComponent(params.requestParams[name]);
-          });
+          Object.keys(params.requestParams).sort(function (a, b) { return a < b ? -1 : 1 }).forEach(function (name) {
+            query += '&' + name + '=' + encodeURIComponent(params.requestParams[name])
+          })
         }
-        return ['https://' + host + uri + '?' + query, query];
-      })();
+        return ['https://' + host + uri + '?' + query, query]
+      })()
 
-      headers['Host'] = host;
-      headers[params.headersDateKey] = dateStringFull;
+      headers['Host'] = host
+      headers[params.headersDateKey] = dateStringFull
       headers['Authorization'] = getAuthorization({
         method: method,
         region: region,
@@ -183,32 +186,32 @@ var AWS = (function() {
         payload: payload,
         dateStringFull: dateStringFull,
         dateStringShort: dateStringShort
-      });
-      delete headers['Host'];
+      })
+      delete headers['Host']
       const options = {
         method: method,
         headers: headers,
         muteHttpExceptions: true,
-        payload: payload,
-      };
+        payload: payload
+      }
 
-      return UrlFetchApp.fetch(request, options);
+      return UrlFetchApp.fetch(request, options)
     }
-  };
+  }
 
-  function getCanonAndSignedHeaders(headers) {
-    const canonHeadersArray = [];
-    const signedHeadersArray = [];
-    Object.keys(headers).sort(function(a, b){return a < b ? -1 : 1;}).forEach(function(key) {
-      canonHeadersArray.push(key.toLowerCase() + ':' + headers[key]);
-      signedHeadersArray.push(key.toLowerCase());
-    });
+  function getCanonAndSignedHeaders (headers) {
+    const canonHeadersArray = []
+    const signedHeadersArray = []
+    Object.keys(headers).sort(function (a, b) { return a < b ? -1 : 1 }).forEach(function (key) {
+      canonHeadersArray.push(key.toLowerCase() + ':' + headers[key])
+      signedHeadersArray.push(key.toLowerCase())
+    })
     return [canonHeadersArray.join('\n') + '\n', signedHeadersArray.join(';')]
   }
 
-  function getAuthorization(params) {
-    const hashAlgorithm = 'AWS4-HMAC-SHA256';
-    const [canonHeaders, signedHeaders] = getCanonAndSignedHeaders(params.headers);
+  function getAuthorization (params) {
+    const hashAlgorithm = 'AWS4-HMAC-SHA256'
+    const [canonHeaders, signedHeaders] = getCanonAndSignedHeaders(params.headers)
     const CanonicalString = [
       params.method,
       params.uri,
@@ -216,28 +219,28 @@ var AWS = (function() {
       canonHeaders,
       signedHeaders,
       Crypto.SHA256(params.payload)
-    ].join('\n');
-    const scope = params.dateStringShort + '/' + params.region + '/' + params.service + '/aws4_request';
+    ].join('\n')
+    const scope = params.dateStringShort + '/' + params.region + '/' + params.service + '/aws4_request'
     const StringToSign = [
       hashAlgorithm,
       params.dateStringFull,
       scope,
       Crypto.SHA256(CanonicalString)
-    ].join('\n');
-    const key = getSignatureKey(secretKey, params.dateStringShort, params.region, params.service);
-    const signature = Crypto.HMAC(Crypto.SHA256, StringToSign, key, { asBytes: false });
-    return hashAlgorithm + ' Credential=' + accessKey + '/' + scope + ', SignedHeaders=' + signedHeaders + ', Signature=' + signature;
+    ].join('\n')
+    const key = getSignatureKey(secretKey, params.dateStringShort, params.region, params.service)
+    const signature = Crypto.HMAC(Crypto.SHA256, StringToSign, key, { asBytes: false })
+    return hashAlgorithm + ' Credential=' + accessKey + '/' + scope + ', SignedHeaders=' + signedHeaders + ', Signature=' + signature
   }
 
   /**
    * Source: http://docs.aws.amazon.com/general/latest/gr/signature-v4-examples.html#signature-v4-examples-jscript
    */
-  function getSignatureKey(key, dateStamp, regionName, serviceName) {
-    const kDate = Crypto.HMAC(Crypto.SHA256, dateStamp, 'AWS4' + key, { asBytes: true });
-    const kRegion = Crypto.HMAC(Crypto.SHA256, regionName, kDate, { asBytes: true });
-    const kService = Crypto.HMAC(Crypto.SHA256, serviceName, kRegion, { asBytes: true });
-    const kSigning = Crypto.HMAC(Crypto.SHA256, 'aws4_request', kService, { asBytes: true });
+  function getSignatureKey (key, dateStamp, regionName, serviceName) {
+    const kDate = Crypto.HMAC(Crypto.SHA256, dateStamp, 'AWS4' + key, { asBytes: true })
+    const kRegion = Crypto.HMAC(Crypto.SHA256, regionName, kDate, { asBytes: true })
+    const kService = Crypto.HMAC(Crypto.SHA256, serviceName, kRegion, { asBytes: true })
+    const kSigning = Crypto.HMAC(Crypto.SHA256, 'aws4_request', kService, { asBytes: true })
 
-    return kSigning;
+    return kSigning
   }
-})();
+})()
