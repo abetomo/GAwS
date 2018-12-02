@@ -36,3 +36,28 @@ function myFunction() {
   ));
 }
 ```
+
+### Lambda
+#### Sync
+```javascript
+function myFunction() {
+  AWS.init('MY_ACCESS_KEY', 'MY_SECRET_KEY');
+  Logger.log(AWS.lambdaInvoke(
+    'us-west-2', // region
+    'functionName', // functionName
+    '{"key":"value"}' // payload
+  ));
+}
+```
+
+#### Async
+```javascript
+function myFunction() {
+  AWS.init('MY_ACCESS_KEY', 'MY_SECRET_KEY');
+  Logger.log(AWS.lambdaInvokeAsync(
+    'us-west-2', // region
+    'functionName', // functionName
+    '{"key":"value"}' // payload
+  ));
+}
+```
