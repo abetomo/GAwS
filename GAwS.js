@@ -174,9 +174,9 @@ var AWS = (function () {
         return ['https://' + host + uri + '?' + query, query]
       })()
 
-      headers['Host'] = host
+      headers.Host = host
       headers[params.headersDateKey] = dateStringFull
-      headers['Authorization'] = getAuthorization({
+      headers.Authorization = getAuthorization({
         method: method,
         region: region,
         service: service,
@@ -187,7 +187,7 @@ var AWS = (function () {
         dateStringFull: dateStringFull,
         dateStringShort: dateStringShort
       })
-      delete headers['Host']
+      delete headers.Host
       const options = {
         method: method,
         headers: headers,
