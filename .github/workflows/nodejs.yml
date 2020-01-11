@@ -14,7 +14,5 @@ jobs:
       uses: actions/setup-node@master
       with:
         node-version: ${{ matrix.node-version }}
-    - name: npm install and test
-      run: |
-        npm install
-        npm test
+    - run: npm ci
+    - run: npm test
