@@ -113,6 +113,9 @@ var AWS = (function () {
     },
 
     lambdaInvokeAsync: function (region, functionName, payload) {
+      // @todo
+      // https://docs.aws.amazon.com/ja_jp/lambda/latest/dg/API_Invoke.html
+      // InvocationType: Event
       return this.request({
         service: 'lambda',
         region: region,
