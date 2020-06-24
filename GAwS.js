@@ -113,16 +113,16 @@ var AWS = (function () {
     },
 
     lambdaInvokeAsync: function (region, functionName, payload) {
-      // @todo
-      // https://docs.aws.amazon.com/ja_jp/lambda/latest/dg/API_Invoke.html
-      // InvocationType: Event
       return this.request({
         service: 'lambda',
         region: region,
         method: 'POST',
         payload: payload,
-        uri: '/2014-11-13/functions/' + functionName + '/invoke-async/',
+        uri: '/2015-03-31/functions/' + functionName + '/invocations',
         host: 'lambda.' + region + '.amazonaws.com',
+        headers: {
+          'X-Amz-Invocation-Type': 'Event'
+        },
         headersDateKey: 'X-Amz-Date'
       })
     },
