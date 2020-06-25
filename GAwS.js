@@ -25,194 +25,18 @@ function loadCrypto() {
 
 /* eslint-enable */
 /* global Utilities, UrlFetchApp */
-var AWS = (function () {
-  const Crypto = loadCrypto()
-
-  // Keys cannot be retrieved once initialized but can be changed
-  var accessKey
-  var secretKey
-
-  return {
-    /**
-     * Sets new authorization keys
-     * @param {string} argAccessKey - the new access_key
-     * @param {string} argSecretKey - the new secret key
-     */
-    setNewKey: function (argAccessKey, argSecretKey) {
-      if (argAccessKey == null) {
-        throw Error('Error: No access key provided')
-      } else if (argSecretKey == null) {
-        throw Error('Error: No secret key provided')
-      }
-      accessKey = argAccessKey
-      secretKey = argSecretKey
-    },
-
-    /**
-     * Sets up keys for authentication so you can make your requests. Keys are not gettable once added.
-     * @param {string} accessKey - your aws access key
-     * @param {string} secretKey - your aws secret key
-     */
-    init: function (accessKey, secretKey) {
-      AWS.setNewKey(accessKey, secretKey)
-    },
-
-    /**
-     * Authenticates and sends the given parameters for an AWS api request.
-     * @param {string} region - the aws region your command will go to (e.g. 'us-east-1')
-     * @param {string} action - the api action to call
-     * @param {Object} [params] - the parameters to call on the action. Defaults to none.
-     * @param {string} [method=GET] - the http method (e.g. 'GET', 'POST'). Defaults to GET.
-     * @param {(string|object)} [payload={}] - the payload to send. Defults to ''.
-     * @param {Object} [headers={Host:..., X-Amz-Date:...}] - the headers to attach to the request. Host and X-Amz-Date are premade for you.
-     * @param {string} [uri='/'] - the path after the domain before the action. Defaults to '/'.
-     * @return {string} the server response to the request
-     */
-    ec2: function (region, action, params, method, payload, headers, uri) {
-      if (region == null) {
-        throw Error('Error: Region undefined')
-      } else if (action == null) {
-        throw Error('Error: Action undefined')
-      }
-      return this.request({
-        service: 'ec2',
-        region: region,
-        action: action,
-        requestParams: params,
-        method: method,
-        payload: payload,
-        headers: headers,
-        uri: uri,
-        host: 'ec2.' + region + '.amazonaws.com',
-        headersDateKey: 'X-Amz-Date'
-      })
-    },
-
-    s3: function (region, bucket, key, method, payload, headers) {
-      if (region == null) {
-        throw Error('Error: Region undefined')
-      }
-      const _payload = (function () {
-        if (payload == null) return ''
-        if (typeof payload !== 'string') return JSON.stringify(payload)
-        return payload
-      })()
-      if (headers == null) headers = {}
-      headers['x-amz-content-sha256'] = Crypto.SHA256(_payload)
-
-      return this.request({
-        service: 's3',
-        region: region,
-        method: method,
-        payload: _payload,
-        headers: headers,
-        uri: '/' + key,
-        host: bucket + '.s3-' + region + '.amazonaws.com',
-        headersDateKey: 'Date'
-      })
-    },
-
-    lambdaInvokeAsync: function (region, functionName, payload) {
-      return this.request({
-        service: 'lambda',
-        region: region,
-        method: 'POST',
-        payload: payload,
-        uri: '/2015-03-31/functions/' + functionName + '/invocations',
-        host: 'lambda.' + region + '.amazonaws.com',
-        headers: {
-          'X-Amz-Invocation-Type': 'Event'
-        },
-        headersDateKey: 'X-Amz-Date'
-      })
-    },
-
-    lambdaInvoke: function (region, functionName, payload) {
-      return this.request({
-        service: 'lambda',
-        region: region,
-        method: 'POST',
-        payload: payload,
-        uri: '/2015-03-31/functions/' + functionName + '/invocations',
-        host: 'lambda.' + region + '.amazonaws.com',
-        headersDateKey: 'X-Amz-Date'
-      })
-    },
-
-    request: function (params) {
-      const service = params.service
-      const region = params.region
-      const action = params.action
-      const method = params.method || 'GET'
-      const payload = (function () {
-        if (params.payload == null) return ''
-        if (typeof params.payload !== 'string') return JSON.stringify(params.payload)
-        return params.payload
-      })()
-      const headers = params.headers || {}
-      const uri = params.uri || '/'
-      const host = params.host
-
-      const [dateStringFull, dateStringShort] = (function () {
-        const date = new Date()
-        return [
-          Utilities.formatDate(date, 'UTC', "yyyyMMdd'T'HHmmss'Z'"),
-          Utilities.formatDate(date, 'UTC', 'yyyyMMdd')
-        ]
-      })()
-
-      const [request, query] = (function () {
-        if (method.toLowerCase() === 'post') {
-          return ['https://' + host + uri, '']
-        }
-        var query = ''
-        if (action != null) {
-          query = 'Action=' + action
-        }
-        if (params.requestParams) {
-          Object.keys(params.requestParams).sort(function (a, b) { return a < b ? -1 : 1 }).forEach(function (name) {
-            query += '&' + name + '=' + encodeURIComponent(params.requestParams[name])
-          })
-        }
-        return ['https://' + host + uri + '?' + query, query]
-      })()
-
-      headers.Host = host
-      headers[params.headersDateKey] = dateStringFull
-      headers.Authorization = getAuthorization({
-        method: method,
-        region: region,
-        service: service,
-        uri: uri,
-        query: query,
-        headers: headers,
-        payload: payload,
-        dateStringFull: dateStringFull,
-        dateStringShort: dateStringShort
-      })
-      delete headers.Host
-      const options = {
-        method: method,
-        headers: headers,
-        muteHttpExceptions: true,
-        payload: payload
-      }
-
-      return UrlFetchApp.fetch(request, options)
-    }
-  }
-
-  function getCanonAndSignedHeaders (headers) {
+const AWS = (() => {
+  const getCanonAndSignedHeaders = (headers) => {
     const canonHeadersArray = []
     const signedHeadersArray = []
-    Object.keys(headers).sort(function (a, b) { return a < b ? -1 : 1 }).forEach(function (key) {
+    Object.keys(headers).sort((a, b) => { return a < b ? -1 : 1 }).forEach((key) => {
       canonHeadersArray.push(key.toLowerCase() + ':' + headers[key])
       signedHeadersArray.push(key.toLowerCase())
     })
     return [canonHeadersArray.join('\n') + '\n', signedHeadersArray.join(';')]
   }
 
-  function getAuthorization (params) {
+  const getAuthorization = (params) => {
     const hashAlgorithm = 'AWS4-HMAC-SHA256'
     const [canonHeaders, signedHeaders] = getCanonAndSignedHeaders(params.headers)
     const CanonicalString = [
@@ -238,12 +62,188 @@ var AWS = (function () {
   /**
    * Source: http://docs.aws.amazon.com/general/latest/gr/signature-v4-examples.html#signature-v4-examples-jscript
    */
-  function getSignatureKey (key, dateStamp, regionName, serviceName) {
+  const getSignatureKey = (key, dateStamp, regionName, serviceName) => {
     const kDate = Crypto.HMAC(Crypto.SHA256, dateStamp, 'AWS4' + key, { asBytes: true })
     const kRegion = Crypto.HMAC(Crypto.SHA256, regionName, kDate, { asBytes: true })
     const kService = Crypto.HMAC(Crypto.SHA256, serviceName, kRegion, { asBytes: true })
     const kSigning = Crypto.HMAC(Crypto.SHA256, 'aws4_request', kService, { asBytes: true })
 
     return kSigning
+  }
+
+  const Crypto = loadCrypto()
+
+  // Keys cannot be retrieved once initialized but can be changed
+  let accessKey
+  let secretKey
+
+  return {
+    /**
+     * Sets new authorization keys
+     * @param {string} argAccessKey - the new access_key
+     * @param {string} argSecretKey - the new secret key
+     */
+    setNewKey (argAccessKey, argSecretKey) {
+      if (argAccessKey == null) {
+        throw Error('Error: No access key provided')
+      } else if (argSecretKey == null) {
+        throw Error('Error: No secret key provided')
+      }
+      accessKey = argAccessKey
+      secretKey = argSecretKey
+    },
+
+    /**
+     * Sets up keys for authentication so you can make your requests. Keys are not gettable once added.
+     * @param {string} accessKey - your aws access key
+     * @param {string} secretKey - your aws secret key
+     */
+    init (accessKey, secretKey) {
+      AWS.setNewKey(accessKey, secretKey)
+    },
+
+    /**
+     * Authenticates and sends the given parameters for an AWS api request.
+     * @param {string} region - the aws region your command will go to (e.g. 'us-east-1')
+     * @param {string} action - the api action to call
+     * @param {Object} [params] - the parameters to call on the action. Defaults to none.
+     * @param {string} [method=GET] - the http method (e.g. 'GET', 'POST'). Defaults to GET.
+     * @param {(string|object)} [payload={}] - the payload to send. Defults to ''.
+     * @param {Object} [headers={Host:..., X-Amz-Date:...}] - the headers to attach to the request. Host and X-Amz-Date are premade for you.
+     * @param {string} [uri='/'] - the path after the domain before the action. Defaults to '/'.
+     * @return {string} the server response to the request
+     */
+    ec2 (region, action, params, method, payload, headers, uri) {
+      if (region == null) {
+        throw Error('Error: Region undefined')
+      } else if (action == null) {
+        throw Error('Error: Action undefined')
+      }
+      return this.request({
+        region,
+        action,
+        method,
+        payload,
+        headers,
+        uri,
+        service: 'ec2',
+        requestParams: params,
+        host: 'ec2.' + region + '.amazonaws.com',
+        headersDateKey: 'X-Amz-Date'
+      })
+    },
+
+    s3 (region, bucket, key, method, payload, headers) {
+      if (region == null) {
+        throw Error('Error: Region undefined')
+      }
+      const _payload = (() => {
+        if (payload == null) return ''
+        if (typeof payload !== 'string') return JSON.stringify(payload)
+        return payload
+      })()
+      if (headers == null) headers = {}
+      headers['x-amz-content-sha256'] = Crypto.SHA256(_payload)
+
+      return this.request({
+        region,
+        method,
+        payload,
+        headers,
+        service: 's3',
+        uri: '/' + key,
+        host: bucket + '.s3-' + region + '.amazonaws.com',
+        headersDateKey: 'Date'
+      })
+    },
+
+    lambdaInvokeAsync (region, functionName, payload) {
+      return this.request({
+        region,
+        payload,
+        service: 'lambda',
+        method: 'POST',
+        uri: '/2015-03-31/functions/' + functionName + '/invocations',
+        host: 'lambda.' + region + '.amazonaws.com',
+        headers: {
+          'X-Amz-Invocation-Type': 'Event'
+        },
+        headersDateKey: 'X-Amz-Date'
+      })
+    },
+
+    lambdaInvoke (region, functionName, payload) {
+      return this.request({
+        region,
+        payload,
+        service: 'lambda',
+        method: 'POST',
+        uri: '/2015-03-31/functions/' + functionName + '/invocations',
+        host: 'lambda.' + region + '.amazonaws.com',
+        headersDateKey: 'X-Amz-Date'
+      })
+    },
+
+    request (params) {
+      const service = params.service
+      const region = params.region
+      const action = params.action
+      const method = params.method || 'GET'
+      const payload = (() => {
+        if (params.payload == null) return ''
+        if (typeof params.payload !== 'string') return JSON.stringify(params.payload)
+        return params.payload
+      })()
+      const headers = params.headers || {}
+      const uri = params.uri || '/'
+      const host = params.host
+
+      const [dateStringFull, dateStringShort] = (() => {
+        const date = new Date()
+        return [
+          Utilities.formatDate(date, 'UTC', "yyyyMMdd'T'HHmmss'Z'"),
+          Utilities.formatDate(date, 'UTC', 'yyyyMMdd')
+        ]
+      })()
+
+      const [request, query] = (() => {
+        if (method.toLowerCase() === 'post') {
+          return ['https://' + host + uri, '']
+        }
+        let query = ''
+        if (action != null) {
+          query = 'Action=' + action
+        }
+        if (params.requestParams) {
+          Object.keys(params.requestParams).sort((a, b) => { return a < b ? -1 : 1 }).forEach((name) => {
+            query += '&' + name + '=' + encodeURIComponent(params.requestParams[name])
+          })
+        }
+        return ['https://' + host + uri + '?' + query, query]
+      })()
+
+      headers.Host = host
+      headers[params.headersDateKey] = dateStringFull
+      headers.Authorization = getAuthorization({
+        method,
+        region,
+        service,
+        uri,
+        query,
+        headers,
+        payload,
+        dateStringFull,
+        dateStringShort
+      })
+      delete headers.Host
+      const options = {
+        method,
+        headers,
+        payload,
+        muteHttpExceptions: true
+      }
+
+      return UrlFetchApp.fetch(request, options)
+    }
   }
 })()
