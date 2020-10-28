@@ -24,6 +24,7 @@ function myFunction() {
 ```
 
 ### S3
+#### put object
 ```javascript
 function myFunction() {
   AWS.init('MY_ACCESS_KEY', 'MY_SECRET_KEY');
@@ -34,6 +35,20 @@ function myFunction() {
     'PUT', // method
     '{"key":"value"}' // payload
   ));
+}
+```
+
+#### get object
+```javascript
+function myFunction() {
+  AWS.init('MY_ACCESS_KEY', 'MY_SECRET_KEY');
+  res = AWS.s3(
+    'us-west-2', // region
+    'bucket', // bucket
+    'key', // key
+    'GET' // method
+  );
+  Logger.log(res.getContentText());
 }
 ```
 
