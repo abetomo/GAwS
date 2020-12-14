@@ -206,7 +206,7 @@ const AWS = (() => {
         ]
       })()
 
-      const [request, query] = (() => {
+      const [url, query] = (() => {
         if (method.toLowerCase() === 'post') {
           return ['https://' + host + uri, '']
         }
@@ -243,7 +243,7 @@ const AWS = (() => {
         muteHttpExceptions: true
       }
 
-      return UrlFetchApp.fetch(request, options)
+      return UrlFetchApp.fetch(url, options)
     }
   }
 })()
