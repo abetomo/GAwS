@@ -15,7 +15,7 @@ A script for calling the AWS API from Google Apps Script.
 ```javascript
 function myFunction() {
   AWS.init('MY_ACCESS_KEY', 'MY_SECRET_KEY');
-  Logger.log(AWS.ec2(
+  console.log(AWS.ec2(
     'us-east-1', // region
     'DescribeInstances', // action
     {"Version":"2015-10-01"} // params
@@ -28,7 +28,7 @@ function myFunction() {
 ```javascript
 function myFunction() {
   AWS.init('MY_ACCESS_KEY', 'MY_SECRET_KEY');
-  Logger.log(AWS.s3(
+  console.log(AWS.s3(
     'us-west-2', // region
     'bucket', // bucket
     'key', // key
@@ -48,7 +48,7 @@ function myFunction() {
     'key', // key
     'GET' // method
   );
-  Logger.log(res.getContentText());
+  console.log(res.getContentText());
 }
 ```
 
@@ -57,7 +57,7 @@ function myFunction() {
 ```javascript
 function myFunction() {
   AWS.init('MY_ACCESS_KEY', 'MY_SECRET_KEY');
-  Logger.log(AWS.lambdaInvoke(
+  console.log(AWS.lambdaInvoke(
     'us-west-2', // region
     'functionName', // functionName
     '{"key":"value"}' // payload
@@ -69,7 +69,7 @@ function myFunction() {
 ```javascript
 function myFunction() {
   AWS.init('MY_ACCESS_KEY', 'MY_SECRET_KEY');
-  Logger.log(AWS.lambdaInvokeAsync(
+  console.log(AWS.lambdaInvokeAsync(
     'us-west-2', // region
     'functionName', // functionName
     '{"key":"value"}' // payload
