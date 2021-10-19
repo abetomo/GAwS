@@ -4,8 +4,8 @@
   "description": "A script for calling the AWS API from Google Apps Script.",
   "main": "GAwS.js",
   "devDependencies": {
-    "@google/clasp": "^2.4.0",
-    "standard": "^16.0.3"
+    "@google/clasp": "^2.4.1",
+    "standard": "^16.0.4"
   },
   "scripts": {
     "lint": "standard",
