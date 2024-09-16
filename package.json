@@ -5,7 +5,7 @@
   "main": "GAwS.js",
   "devDependencies": {
     "@google/clasp": "^2.4.2",
-    "standard": "^17.1.0"
+    "standard": "^17.1.2"
   },
   "scripts": {
     "lint": "standard",
