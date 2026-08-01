@@ -1,6 +1,5 @@
-
-
 # GAwS
+
 Un fork de [aws-apps-scripts](https://github.com/smithy545/aws-apps-scripts).
 Un script para llamar a la API de AWS desde Google Apps Script.
 
@@ -11,7 +10,8 @@ Un script para llamar a la API de AWS desde Google Apps Script.
 3. Abre un nuevo archivo y configura la variable AWS con AWS.init.
 4. Usa el método para cada servicio.
 
-## Ejemplo:
+## Ejemplo
+
 ### EC2
 
 ```javascript
@@ -26,7 +26,9 @@ function myFunction() {
 ```
 
 ### S3
+
 #### Subir objeto
+
 ```javascript
 function myFunction() {
   AWS.init('MY_ACCESS_KEY', 'MY_SECRET_KEY');
@@ -41,6 +43,7 @@ function myFunction() {
 ```
 
 #### Obtener objeto
+
 ```javascript
 function myFunction() {
   AWS.init('MY_ACCESS_KEY', 'MY_SECRET_KEY');
@@ -55,7 +58,9 @@ function myFunction() {
 ```
 
 ### Lambda
+
 #### Síncrono
+
 ```javascript
 function myFunction() {
   AWS.init('MY_ACCESS_KEY', 'MY_SECRET_KEY');
@@ -68,6 +73,7 @@ function myFunction() {
 ```
 
 #### Asíncrono
+
 ```javascript
 function myFunction() {
   AWS.init('MY_ACCESS_KEY', 'MY_SECRET_KEY');
